@@ -540,17 +540,15 @@ function showScreen(id){
 /* ══════════════════════════════════════════════════
    COMPTEUR
 ══════════════════════════════════════════════════ */
-const NS  = 'stef64-declic-metier'; // namespace unique
-const KEY = 'starts';
+const DB_URL = 'https://declic-stef64-default-rtdb.firebaseio.com';
+const COUNTER_KEY = 'declic-metier-starts';
 
 async function loadCounter(){
   try{
-    const r = await fetch(`https://api.countapi.xyz/get/${NS}/${KEY}`);
-    const d = await r.json();
+    const r = await fetch(`${DB_URL}/${COUNTER_KEY}.json`);
+    const val = await r.json();
     const el = document.getElementById('counter-display');
-    if(el) el.textContent = d.value != null
-      ? Number(d.value).toLocaleString('fr-FR')
-      : '—';
+    if(el) el.textContent = val ? Number(val).toLocaleString('fr-FR') : '0';
   }catch(e){
     const el = document.getElementById('counter-display');
     if(el) el.textContent = '—';
@@ -559,7 +557,13 @@ async function loadCounter(){
 
 async function incrementCounter(){
   try{
-    await fetch(`https://api.countapi.xyz/hit/${NS}/${KEY}`);
+    const r = await fetch(`${DB_URL}/${COUNTER_KEY}.json`);
+    const val = (await r.json()) || 0;
+    await fetch(`${DB_URL}/${COUNTER_KEY}.json`,{
+      method:'PUT',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(val + 1)
+    });
   }catch(e){}
 }
 
