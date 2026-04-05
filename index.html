@@ -32,6 +32,7 @@
   .btn-inner{background:linear-gradient(90deg,#FF6B9D,#C44569);padding:18px;font-size:17px;font-weight:800;color:#fff;display:block;text-align:center;letter-spacing:.3px}
   .btn-inner:hover{filter:brightness(1.08)}
   .disclaimer{color:rgba(255,255,255,.4);font-size:13px;margin-top:14px;z-index:1}
+  .version-date{color:rgba(255,255,255,.3);font-size:11px;margin-top:6px;z-index:1;letter-spacing:.3px}
 
   /* ── Quiz ── */
   .quiz-header{padding:16px 20px 6px}
@@ -195,6 +196,8 @@
       <span class="btn-inner">Commencer le test &nbsp;→</span>
     </button>
     <p class="disclaimer">Gratuit · 3 minutes · Résultats instantanés</p>
+    <p class="version-date">🔄 Dernière mise à jour : 05 avril 2026 à 18h30</p>
+    <p class="version-date">✨ Application créée par Stef64</p>
   </div>
 </div>
 
@@ -700,13 +703,24 @@ function computeScores(){
 function getTopCareers(n=3){
   const scores = computeScores();
   const max = Math.max(...Object.values(scores));
+
+  // Génère un index stable à partir des réponses (pas de hasard)
+  // On additionne les codes des labels sélectionnés pour obtenir un nombre reproductible
+  const answerFingerprint = answers.flat().reduce((acc, opt) => {
+    if(!opt || !opt.l) return acc;
+    for(let i=0;i<opt.l.length;i++) acc += opt.l.charCodeAt(i);
+    return acc;
+  }, 0);
+
   return Object.entries(scores)
     .sort(([,a],[,b])=>b-a)
     .slice(0,n)
     .map(([cat,score])=>{
       const data = CAREERS[cat];
       if(!data) return null;
-      const job = data.jobs[Math.floor(Math.random()*data.jobs.length)];
+      // Index déterministe : mêmes réponses = même job, toujours
+      const jobIndex = answerFingerprint % data.jobs.length;
+      const job = data.jobs[jobIndex];
       return {cat,score,compat:max>0?Math.round(score/max*100):0,...data,job};
     }).filter(Boolean);
 }
